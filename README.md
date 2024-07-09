@@ -30,4 +30,5 @@ After logging everything, at the end of the day/week, I just run this script. I 
 4) From Menu, Extensions > Apps Script
 5) In Apps Script, Copy paste source code and save
 6) Run
-7) Go back to the Google Sheet. See the updated values from row 7. Modify them and log them in timesheet manually.
+7) Go back to the Google Sheet. See the updated values from row 7. Modify values in columns J,K,L.
+8) Log the final text in timesheet manually. (This can be automated by you based on your timesheet software)

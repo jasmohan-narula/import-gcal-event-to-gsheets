@@ -2,82 +2,81 @@ function importGoogleCalendar() {
   var sheet = SpreadsheetApp.getActiveSheet();
   var calendarId = sheet.getRange('B1').getValue().toString(); 
   var calendar = CalendarApp.getCalendarById(calendarId);
- 
+  
+  if (!calendar) {
+    Logger.log('Calendar not found: ' + calendarId);
+    return;
+  }
+
   // Set filters
   var startDate = sheet.getRange('B2').getValue();
   var endDate = sheet.getRange('B3').getValue();
   var searchText = sheet.getRange('B4').getValue();
- 
-  // Print header
-  var header = [["Title", "Description", "Location", "Start", "End", "Duration", "Start Time", "End Time","Text - Intermediate", "Call (Edit)", "Call Via (Edit)", "GuestList (Edit)", "Final Timesheet Text"]];
-	
+  
+  // Set header in Google Sheet
+  var header = [["Title", "Description", "Location", "Start DateTime", "End DateTime", "Duration", "Start Time", "End Time", "Text - Intermediate", "Call (Edit)", "Call Via (Edit)", "GuestList (Edit)", "Final Timesheet Text"]];
   var range = sheet.getRange("A6:M6");
   range.setValues(header);
-  range.setFontWeight("bold")
- 
+  range.setFontWeight("bold");
+
   // Get events based on filters from Google Calendar
   var events = (searchText == '') ? calendar.getEvents(startDate, endDate) : calendar.getEvents(startDate, endDate, {search: searchText});
- 
-  // Display events 
-  for (var i=0; i<events.length; i++) {
+  
+  // Prepare data for bulk update
+  var data = [];
+  for (var i = 0; i < events.length; i++) {
     // Skip configuration and header rows
-    var row = i+7;
-    
-    var details = [[events[i].getTitle(), events[i].getDescription(), events[i].getLocation(), events[i].getStartTime(), events[i].getEndTime(), 0, events[i].getStartTime(), events[i].getEndTime()]];
-    
-    range = sheet.getRange(row,1,1,8);
-    range.setValues(details);
- 
+    var row = i + 7;
 
-    // Format the Start and End columns
-    var cell = sheet.getRange(row, 4);
-    cell.setNumberFormat('mm/dd/yyyy hh:mm');
+    var event = events[i];
 
-    cell = sheet.getRange(row, 5);
-    cell.setNumberFormat('mm/dd/yyyy hh:mm');
+    // Calculate Time
+    var startTime = event.getStartTime();
+    var endTime = event.getEndTime();
+    var duration = (endTime - startTime) / (1000 * 60 * 60); // Duration in hours
+    var startTimeFormatted = Utilities.formatDate(startTime, Session.getScriptTimeZone(), 'hh:mm a');
+    var endTimeFormatted = Utilities.formatDate(endTime, Session.getScriptTimeZone(), 'hh:mm a');
 
-    // Time Set
-    startDate = sheet.getRange(row, 7).setNumberFormat('hh:mm AM/PM').getDisplayValue();
-    //console.log(startDate);
-    endDate = sheet.getRange(row, 8).setNumberFormat('hh:mm AM/PM').getDisplayValue();
-    //console.log(endDate);
+    var callEdit = false;
 
-    // Calculate the Duration column
-    cell = sheet.getRange(row, 6);
-    cell.setFormula('=(HOUR(E' + row + ')+(MINUTE(E' +row+ ')/60))-(HOUR(D' +row+ ')+(MINUTE(D' +row+ ')/60))');
-    cell.setNumberFormat('0.00');
+    var timeSheetFinalText = `{(${startTimeFormatted}-${endTimeFormatted}) "${event.getTitle()}" Call [via ]}`;
+    // Print "Final Timesheet Text"
+    Logger.log(timeSheetFinalText);
 
+    data.push([event.getTitle(), event.getDescription(), event.getLocation(), startTime, endTime, duration, startTimeFormatted, endTimeFormatted, timeSheetFinalText, callEdit, '', '', '']);
+  }
 
-    var location =  events[i].getLocation();
-    if(location != ""){
-      sheet.getRange(row, 10).insertCheckboxes("Y");
-    } else {
-      sheet.getRange(row, 10).insertCheckboxes("N");
+  // Update sheet in bulk
+  if (data.length > 0) {
+    var dataRange = sheet.getRange(7, 1, data.length, 13);
+    dataRange.setValues(data);
+
+    // Apply formatting
+    var startRange = sheet.getRange(7, 4, data.length, 1);
+    var endRange = sheet.getRange(7, 5, data.length, 1);
+    startRange.setNumberFormat('MM/dd/yyyy hh:mm AM/PM');
+    endRange.setNumberFormat('MM/dd/yyyy hh:mm AM/PM');
+
+    var durationRange = sheet.getRange(7, 6, data.length, 1);
+    durationRange.setNumberFormat('0.00');
+
+    var startTimeRange = sheet.getRange(7, 7, data.length, 1);
+    var endTimeRange = sheet.getRange(7, 8, data.length, 1);
+    startTimeRange.setNumberFormat('hh:mm AM/PM');
+    endTimeRange.setNumberFormat('hh:mm AM/PM');
+
+    // Insert checkboxes for "Call (Edit)"
+    var callEditRange = sheet.getRange(7, 10, data.length, 1);
+    callEditRange.insertCheckboxes();
+
+    // Set final timesheet text formula
+    for (var j = 0; j < data.length; j++) {
+      var row = j + 7;
+      var finalCellForCall = sheet.getRange(row, 13);
+      var cellNameForText = "I" + row;
+      var cellNameForCall = "K" + row;
+      var formulaSubstituteValue = '"' + "[via " + '"&' + cellNameForCall + '&"' + "]" + '"';
+      finalCellForCall.setFormula('=SUBSTITUTE(' + cellNameForText + ', "[via ]", ' + formulaSubstituteValue + ')');
     }
-
-
-    //Clear Call Via
-    sheet.getRange(row, 11).setValue('');
-
-
-    // Timesheet Final Text
-    var timeSheetFinalText = '';
-    timeSheetFinalText = "{(" + startDate + "-" + endDate + ")" + " \"" + events[i].getTitle() + "\"";
-    timeSheetFinalText = timeSheetFinalText + " Call ";
-    timeSheetFinalText = timeSheetFinalText + "[via ]";
-    timeSheetFinalText = timeSheetFinalText + "}";
-    console.log(timeSheetFinalText);
-    sheet.getRange(row, 9).setValue(timeSheetFinalText);
-
-
-
-    
-
-    var finalCellForCall = sheet.getRange(row, 13);
-    var cellNameForText = "I" + row ;
-    var cellNameForCall = "K" + row;
-    var formulaSubstituteValue = '"' + "[via " + '"&' + cellNameForCall + '&"' + "]" + '"';
-
-    finalCellForCall.setFormula('=SUBSTITUTE(' + cellNameForText + ', "[via ]", ' + formulaSubstituteValue + ')');    
   }
 }
