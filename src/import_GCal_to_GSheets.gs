@@ -82,9 +82,12 @@ function importGoogleCalendar() {
       var cellNameForText = "I" + row;
       var cellNameForCallCondition = "J" + row;
       var cellNameForCallViaCondition = "K" + row;
+      var cellNameForGuestList = "L" + row;
 
-      var finalFormula = '=CONCATENATE(' + cellNameForText + ', IF(' + cellNameForCallCondition + '=TRUE, " Call", ""), IF(' + cellNameForCallViaCondition + '="", "", CONCATENATE(" [via ",' + cellNameForCallViaCondition + ',"]")))';
-      Logger.log(finalFormula);
+      var finalFormula = '=CONCATENATE(' + cellNameForText+ ', IF(' + cellNameForCallCondition + '=TRUE, " Call", ""), IF('+
+        cellNameForCallViaCondition + '="", "", CONCATENATE(" [via ",' + cellNameForCallViaCondition + ',"]"))' + ', IF(' + 
+        cellNameForGuestList + '="", "", CONCATENATE(" with ",' + cellNameForGuestList + ')))';
+      //Logger.log(finalFormula);
 
       finalCellForCall.setFormula(finalFormula);
     }
