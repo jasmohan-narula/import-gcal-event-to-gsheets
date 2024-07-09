@@ -14,8 +14,8 @@ function importGoogleCalendar() {
   var searchText = sheet.getRange('B4').getValue();
   
   // Set header in Google Sheet
-  var header = [["Title", "Description", "Location", "Start DateTime", "End DateTime", "Duration", "Start Time", "End Time", "Text - Intermediate", "Call (Edit)", "Call Via (Edit)", "GuestList (Edit)", "Final Timesheet Text"]];
-  var range = sheet.getRange("A6:M6");
+  var header = [["Title", "Description", "Location", "Start DateTime", "End DateTime", "Duration", "Start Time", "End Time", "Text - Intermediate", "Call (Edit)", "Call Via (Edit)", "GuestList (Edit)", "Ticket IDs (Edit)", "Final Timesheet Text"]];
+  var range = sheet.getRange("A6:N6");
   range.setValues(header);
   range.setFontWeight("bold");
 
@@ -39,16 +39,16 @@ function importGoogleCalendar() {
 
     var callEdit = false;
 
-    var timeSheetFinalText = `{(${startTimeFormatted}-${endTimeFormatted}) "${event.getTitle()}"}`;
-    // Print "Final Timesheet Text"
-    Logger.log(timeSheetFinalText);
+    var textIntermediate = `{(${startTimeFormatted}-${endTimeFormatted}) "${event.getTitle()}"}`;
+    // Print "Text - Intermediate"
+    Logger.log(textIntermediate);
 
-    data.push([event.getTitle(), event.getDescription(), event.getLocation(), startTime, endTime, duration, startTimeFormatted, endTimeFormatted, timeSheetFinalText, callEdit, '', '', '']);
+    data.push([event.getTitle(), event.getDescription(), event.getLocation(), startTime, endTime, duration, startTimeFormatted, endTimeFormatted, textIntermediate, callEdit, '', '', '', '']);
   }
 
   // Update sheet in bulk
   if (data.length > 0) {
-    var dataRange = sheet.getRange(7, 1, data.length, 13);
+    var dataRange = sheet.getRange(7, 1, data.length, 14);
     dataRange.setValues(data);
 
     // Apply formatting
@@ -78,15 +78,17 @@ function importGoogleCalendar() {
     // Set final timesheet text formula dynamically
     for (var j = 0; j < data.length; j++) {
       var row = j + 7;
-      var finalCellForCall = sheet.getRange(row, 13);
+      var finalCellForCall = sheet.getRange(row, 14);
       var cellNameForText = "I" + row;
       var cellNameForCallCondition = "J" + row;
       var cellNameForCallViaCondition = "K" + row;
       var cellNameForGuestList = "L" + row;
+      var cellNameForTicketIds = "M" + row;
 
       var finalFormula = '=CONCATENATE(' + cellNameForText + ', IF(' + cellNameForCallCondition + '=TRUE, " Call", ""), IF(' +
         cellNameForCallViaCondition + '="", "", CONCATENATE(" [via ",' + cellNameForCallViaCondition + ',"]"))' + ', IF(' + 
-        cellNameForGuestList + '="", "", CONCATENATE(" with ",PROPER(TRIM(' + cellNameForGuestList + ')) )) )';
+        cellNameForGuestList + '="", "", CONCATENATE(" with ",PROPER(TRIM(' + cellNameForGuestList + ')) ))' + ', IF(' + 
+        cellNameForTicketIds + '="", "", CONCATENATE(" [on ",' + cellNameForTicketIds + ',"]"))' + ' )';
       //Logger.log(finalFormula);
 
       finalCellForCall.setFormula(finalFormula);
