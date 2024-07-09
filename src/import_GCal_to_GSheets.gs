@@ -39,7 +39,7 @@ function importGoogleCalendar() {
 
     var callEdit = false;
 
-    var timeSheetFinalText = `{(${startTimeFormatted}-${endTimeFormatted}) "${event.getTitle()}" Call [via ]}`;
+    var timeSheetFinalText = `{(${startTimeFormatted}-${endTimeFormatted}) "${event.getTitle()}"}`;
     // Print "Final Timesheet Text"
     Logger.log(timeSheetFinalText);
 
@@ -69,14 +69,18 @@ function importGoogleCalendar() {
     var callEditRange = sheet.getRange(7, 10, data.length, 1);
     callEditRange.insertCheckboxes();
 
-    // Set final timesheet text formula
+    // Set final timesheet text formula dynamically
     for (var j = 0; j < data.length; j++) {
       var row = j + 7;
       var finalCellForCall = sheet.getRange(row, 13);
       var cellNameForText = "I" + row;
-      var cellNameForCall = "K" + row;
-      var formulaSubstituteValue = '"' + "[via " + '"&' + cellNameForCall + '&"' + "]" + '"';
-      finalCellForCall.setFormula('=SUBSTITUTE(' + cellNameForText + ', "[via ]", ' + formulaSubstituteValue + ')');
+      var cellNameForCallCondition = "J" + row;
+      var cellNameForCallViaCondition = "K" + row;
+
+      var finalFormula = '=CONCATENATE(' + cellNameForText + ', IF(' + cellNameForCallCondition + '=TRUE, " Call", ""), IF(' + cellNameForCallViaCondition + '="", "", CONCATENATE(" [via ",' + cellNameForCallViaCondition + ',"]")))';
+      Logger.log(finalFormula);
+
+      finalCellForCall.setFormula(finalFormula);
     }
   }
 }
