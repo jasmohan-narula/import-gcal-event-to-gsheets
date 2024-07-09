@@ -69,6 +69,12 @@ function importGoogleCalendar() {
     var callEditRange = sheet.getRange(7, 10, data.length, 1);
     callEditRange.insertCheckboxes();
 
+    // Create Named Range for Call Via column in NamedRangesList sheet
+    createNamedRangeForCallVia();
+
+    // Apply data validation for "Call Via (Edit)"
+    applyDataValidationForCallVia(sheet, data.length);
+    
     // Set final timesheet text formula dynamically
     for (var j = 0; j < data.length; j++) {
       var row = j + 7;
@@ -83,4 +89,21 @@ function importGoogleCalendar() {
       finalCellForCall.setFormula(finalFormula);
     }
   }
+}
+
+function createNamedRangeForCallVia() {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var namedRangesListSheet = spreadsheet.getSheetByName('NamedRangesList');
+  var callViaRange = namedRangesListSheet.getRange('A2:A'); // Assuming Call Via values are in column A
+
+  // Create named range for Call Via
+  spreadsheet.setNamedRange('CallViaOptions', callViaRange);
+}
+
+function applyDataValidationForCallVia(sheet, numRows) {
+  var callViaRange = SpreadsheetApp.getActiveSpreadsheet().getRangeByName('CallViaOptions');
+  var callViaValidationRule = SpreadsheetApp.newDataValidation().requireValueInRange(callViaRange).build();
+  var callViaEditRange = sheet.getRange(7, 11, numRows, 1); // Assuming Call Via (Edit) starts at column K, row 7
+
+  callViaEditRange.setDataValidation(callViaValidationRule);
 }
