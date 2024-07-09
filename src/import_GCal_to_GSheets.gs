@@ -84,9 +84,9 @@ function importGoogleCalendar() {
       var cellNameForCallViaCondition = "K" + row;
       var cellNameForGuestList = "L" + row;
 
-      var finalFormula = '=CONCATENATE(' + cellNameForText+ ', IF(' + cellNameForCallCondition + '=TRUE, " Call", ""), IF('+
+      var finalFormula = '=CONCATENATE(' + cellNameForText + ', IF(' + cellNameForCallCondition + '=TRUE, " Call", ""), IF(' +
         cellNameForCallViaCondition + '="", "", CONCATENATE(" [via ",' + cellNameForCallViaCondition + ',"]"))' + ', IF(' + 
-        cellNameForGuestList + '="", "", CONCATENATE(" with ",' + cellNameForGuestList + ')))';
+        cellNameForGuestList + '="", "", CONCATENATE(" with ",PROPER(TRIM(' + cellNameForGuestList + ')) )) )';
       //Logger.log(finalFormula);
 
       finalCellForCall.setFormula(finalFormula);

@@ -1,5 +1,7 @@
 # Description
-Import Google Calendar Entries and Events into Google Sheets for timekeeping via Apps Scripts
+Import Google Calendar Entries and Events into Google Sheets for timekeeping via Apps Scripts.
+
+I've and improved this over the last 5 years.
 
 ## Use Case
 I am working in a Company and I'm required to submit my timesheets in a software like HARVEST (https://www.getharvest.com/). In my timesheets usually I input how much time I wanted for which category. Now, my Manager wants me to add descriptions to my timesheets as well.
@@ -24,7 +26,7 @@ After logging everything, at the end of the day/week, I just run this script. I 
 
 
 ## Setup
-1) Create a Google Sheet with the template
+1) Create a Google Sheet with the Template
 2) Configure your GMAIL id in "Calendar ID"
 3) COnfigure start and end date for the time range you want to be updated.
 4) From Menu, Extensions > Apps Script
